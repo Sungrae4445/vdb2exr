@@ -1,6 +1,8 @@
 # An Openvdb to openexr converter for sliced otextures to be imported in Unreal Engine.
 
-![Preview](https://olir/vdb2exr/blob/master/Testdata/Preview-sixteenth-eighth-quarter.JPG?raw=true)
+![Preview](https://github.com/olir/vdb2exr/blob/master/Testdata/Preview-sixteenth-eighth-quarter.JPG?raw=true)
+
+https://raw.githubusercontent.com/syoyo/tinyexr/master/asakusa.png
 
 ## === TESTCASE ===
 
