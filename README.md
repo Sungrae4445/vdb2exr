@@ -1,4 +1,4 @@
-# An Openvdb to openexr converter for sliced otextures to be imported in Unreal Engine.
+# Volume Texture Converter. Converts OpenVDB to OpenEXR as sliced texture tiles ready to be imported in Unreal Engine.
 
 ![Preview](https://github.com/olir/vdb2exr/blob/master/Testdata/Preview-sixteenth-eighth-quarter.JPG?raw=true)
 
