@@ -2,7 +2,7 @@
 
 ![Preview](https://github.com/olir/vdb2exr/blob/master/Testdata/Preview-sixteenth-eighth-quarter.JPG?raw=true)
 
-https://raw.githubusercontent.com/syoyo/tinyexr/master/asakusa.png
+Images of rendered clouds in Unreal at different grade of detail.
 
 ## === TESTCASE ===
 
