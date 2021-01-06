@@ -6,11 +6,11 @@ Images of rendered clouds in Unreal Engine 4.26 at different grade of detail.
 
 The tool reads a vdb file and maps voxel data to image slice:
 
-![Preview](https://github.com/olir/vdb2exr/blob/master/Testdata/Preview-Slices.JPG?raw=true)
+<img src="https://github.com/olir/vdb2exr/blob/master/Testdata/Preview-Slices.JPG?raw=true" alt="Preview" style="zoom:25%;" />
 
 Each slice is a image where density is mapped to grayscale values:
 
-![Preview](https://github.com/olir/vdb2exr/blob/master/Testdata/Preview-One-Slices.JPG?raw=true)
+<img src="https://github.com/olir/vdb2exr/blob/master/Testdata/Preview-One-Slice.JPG?raw=true" alt="Preview" style="zoom: 25%;" />
 
 ## === TESTCASE ===
 
