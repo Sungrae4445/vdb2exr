@@ -2,7 +2,7 @@
 
 ![Preview](https://github.com/olir/vdb2exr/blob/master/Testdata/Preview-sixteenth-eighth-quarter.JPG?raw=true)
 
-Images of rendered clouds in Unreal at different grade of detail.
+Images of rendered clouds in Unreal Engine 4.26 at different grade of detail.
 
 ## === TESTCASE ===
 
@@ -51,4 +51,6 @@ Tutorials this implementation is based on:
 
 The contents of this package are Copyright 2021 Oliver Rode and are licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License. A copy of this license is available at http://creativecommons.org/licenses/by-sa/3.0/. 
 
-Binary Content in Testdata and 3RDPARTY folder are redistributed under it's own conditions as described in license and readme files contained in these folders.
+Binary Content in `Testdata` and `3RDPARTY` folder are redistributed under it's own conditions as described in license and readme files contained in these folders.
+
+`tinyexr` is under 3-clause BSD. `tinyexr` uses miniz, which is developed by Rich Geldreich [richgel99@gmail.com](mailto:richgel99@gmail.com), and licensed under public domain. `tinyexr` tools uses stb, which is licensed under public domain: https://github.com/nothings/stb `tinyexr` uses some code from OpenEXR, which is licensed under 3-clause BSD license.
