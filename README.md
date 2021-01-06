@@ -4,6 +4,14 @@
 
 Images of rendered clouds in Unreal Engine 4.26 at different grade of detail.
 
+The tool reads a vdb file and maps voxel data to image slice:
+
+![Preview](https://github.com/olir/vdb2exr/blob/master/Testdata/Preview-Slices.JPG?raw=true)
+
+Each slice is a image where density is mapped to grayscale values:
+
+![Preview](https://github.com/olir/vdb2exr/blob/master/Testdata/Preview-One-Slices.JPG?raw=true)
+
 ## === TESTCASE ===
 
 Convert vdb from disney to exr and import it as exr texture into Unreal Engine.
