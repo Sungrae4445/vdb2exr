@@ -41,6 +41,8 @@
 #include <math.h>
 
 #include <iostream>
+#include <string>
+
 
 #include <cstdio>
 #include <cstdlib>
@@ -66,6 +68,7 @@
 
 #include <openvdb/openvdb.h>
 #include <openvdb/tools/ChangeBackground.h>
+#include "vdb2exr.h"
 
 
 int main(int argc, char** argv)
@@ -87,10 +90,15 @@ int main(int argc, char** argv)
 
 
     // Create a VDB file object.
-    std::cout << "Reading from "<< "..\\Testdata\\wdas_cloud_sixteenth.vdb" << "\n";
-    openvdb::io::File file("..\\Testdata\\wdas_cloud_sixteenth.vdb");
+    printf("Reading vdb file [ %s ] \n", argv[1]);
+    openvdb::io::File file(argv[1]);
     // Open the file.  This reads the file header, but not any grids.
-    file.open();
+    ;
+    if (!file.open()) {
+        fprintf(stderr, "Error: Open VDB failed!\n");
+        return -5;
+    }
+
     // Loop over all grids in the file and retrieve a shared pointer
     // to the one named "LevelSetSphere".  (This can also be done
     // more simply by calling file.readGrid("LevelSetSphere").)
@@ -101,24 +109,22 @@ int main(int argc, char** argv)
         std::cout << " reading grid " << nameIter.gridName() << "\n";
 
         // Read in only the grid we are interested in.
-        if (nameIter.gridName() == "density") {
+        //if (nameIter.gridName() == "density") {
             baseGrid = file.readGrid(nameIter.gridName());
-        }
-        else {
-            std::cout << "skipping grid " << nameIter.gridName() << std::endl;
-        }
+        //}
+        //else {
+        //    std::cout << "skipping grid " << nameIter.gridName() << std::endl;
+        //}
     }
     file.close();
 
-    std::cout << "Reading completed." << "\n";
-
-
-    int width, height;
-
+    std::cout << "Reading completed. Converting..." << "\n";
 
     // From the example above, "LevelSetSphere" is known to be a FloatGrid,
     // so cast the generic grid pointer to a FloatGrid pointer.
     openvdb::FloatGrid::Ptr grid = openvdb::gridPtrCast<openvdb::FloatGrid>(baseGrid);
+    
+    /*
     // Convert the level set sphere to a narrow-band fog volume, in which
     // interior voxels have value 1, exterior voxels have value 0, and
     // narrow-band voxels have values varying linearly from 0 to 1.
@@ -126,9 +132,49 @@ int main(int argc, char** argv)
     const float gwidth = 2.0 * outside;
 
 
+    // Visit and update all of the grid's active values, which correspond to
+    // voxels on the narrow band.
+    for (openvdb::FloatGrid::ValueOnIter iter = grid->beginValueOn(); iter; ++iter) {
+        openvdb::OPENVDB_VERSION_NAME::math::Coord c = iter.getCoord();
+        float dist = iter.getValue();
+        iter.setValue((outside - dist) / gwidth);
+        printf("d-on [ %d %d %d ] = %f -> %f\n", c.x(), c.y(), c.z(), dist, (outside - dist) / gwidth);
+    }
 
-    width = 1;
-    height = 1;
+    // Visit all of the grid's inactive tile and voxel values and update the values
+    // that correspond to the interior region.
+    for (openvdb::FloatGrid::ValueOffIter iter = grid->beginValueOff(); iter; ++iter) {
+        openvdb::OPENVDB_VERSION_NAME::math::Coord c = iter.getCoord();
+        float dist = iter.getValue();
+        //printf("d-off [ %d %d %d ] = %f\n", c.x(), c.y(), c.z(), dist);
+        if (dist < 0.0) {
+            iter.setValue(1.0);
+            iter.setValueOff();
+        }
+    }
+    // Set exterior voxels to 0.
+    openvdb::tools::changeBackground(grid->tree(), 0.0);
+    */
+    
+
+    // https://artifacts.aswf.io/io/aswf/openvdb/openvdb_introduction_2015/1.0.0/openvdb_introduction_2015-1.0.0.pdf
+
+    openvdb::OPENVDB_VERSION_NAME::math::Coord dim = grid->evalActiveVoxelDim();
+    openvdb::OPENVDB_VERSION_NAME::math::Coord min = grid->evalActiveVoxelBoundingBox().min();
+    int width, height;
+    int dx, dy, dz;
+    dx = dim.x();
+    dz = dim.z();
+    dy = dim.y();
+    int uw = dy;
+    while (uw*uw/4>dy ) {
+        uw = uw / 2;
+    }
+    int uv = (dy + uw - 1) / uw;
+    width = dim.x() * uv;
+    height = dim.z() * uw;
+
+    printf("  prepare output %d x %d x %d   [%d,%d,%d] as   %d x %d   tiling %d x %d\n", dim.x(), dim.y(), dim.z(),min.x(), min.y(), min.z(), width, height, uv, uw);
 
     EXRHeader header;
     InitEXRHeader(&header);
@@ -136,67 +182,97 @@ int main(int argc, char** argv)
     EXRImage image;
     InitEXRImage(&image);
 
-    image.num_channels = 1;
+    image.num_channels = 3;
 
-    std::vector<float> images[1];
+    std::vector<float> images[3];
     images[0].resize(width * height);
-
-
-
-
-    // Visit and update all of the grid's active values, which correspond to
-    // voxels on the narrow band.
-    for (openvdb::FloatGrid::ValueOnIter iter = grid->beginValueOn(); iter; ++iter) {
-        float dist = iter.getValue();
-        iter.setValue((outside - dist) / gwidth);
-        // std::cout << "  dist: " << dist << " -> " << (outside - dist) / gwidth << "\n";
-    }
-
-    // Visit all of the grid's inactive tile and voxel values and update the values
-    // that correspond to the interior region.
-    for (openvdb::FloatGrid::ValueOffIter iter = grid->beginValueOff(); iter; ++iter) {
-        if (iter.getValue() < 0.0) {
-            iter.setValue(1.0);
-            iter.setValueOff();
-        }
-    }
-    // Set exterior voxels to 0.
-    openvdb::tools::changeBackground(grid->tree(), 0.0);
-
-    std::cout << "  constructing image ..." << "\n";
-
+    images[1].resize(width * height);
+    images[2].resize(width * height);
+    // useless? Clear image...
     for (int i = 0; i < width * height; i++) {
         images[0][i] = 0.0f;
+        images[1][i] = 0.0f;
+        images[2][i] = 0.0f;
     }
 
-    float* image_ptr[1];
-    image_ptr[0] = &(images[0].at(0)); // V
+    openvdb::OPENVDB_VERSION_NAME::FloatTree tree = grid->tree();
+    openvdb::OPENVDB_VERSION_NAME::math::Coord cursor;
+
+    for (int y = 0; y < dy; y++) {
+        cursor.setY(min.y() + y);
+        int v = y % uv;
+        int w = (y - v) / uv;
+        for (int z = 0; z < dz; z++) {
+            cursor.setZ(min.z() + z);
+            for (int x = 0; x < dx; x++) {
+                cursor.setX(min.x() + x);
+                float value = tree.getValue(cursor);
+                int i = x;
+                i += z * dx*uv;
+                i += v * dx;
+                i += w * dx*uv*dz;
+                images[0][i] = value;
+                images[1][i] = value;
+                images[2][i] = value;
+                if (value > 0.0f) {
+                    // printf("img [ %d :: %d %d %d ] = -> %f\n", i, x, y, z, value);
+                }
+            }
+        }
+    }
+    // printf("assert [ %d == %d ]\n", (dim.z()-1) + (dim.x()-1) * dim.z() + (dim.y()-1) * dim.x() * dim.z() +1, width * height);
+
+    /*
+    grid->tree();
+    for (int i = 0; i < width * height; i++) {
+    }
+    */
+
+
+    std::cout << "  writing image ..." << "\n";
+
+    float* image_ptr[3];
+    image_ptr[0] = &(images[2].at(0)); // B
+    image_ptr[1] = &(images[1].at(0)); // G
+    image_ptr[2] = &(images[0].at(0)); // R
 
     image.images = (unsigned char**)image_ptr;
     image.width = width;
     image.height = height;
 
-    header.num_channels = 1;
+    header.num_channels = 3;
     header.channels = (EXRChannelInfo*)malloc(sizeof(EXRChannelInfo) * header.num_channels);
     // Must be BGR(A) order, since most of EXR viewers expect this channel order.
-    strncpy_s(header.channels[0].name, "V", 255); header.channels[0].name[strlen("V")] = '\0';
+    strncpy_s(header.channels[0].name, "B", 255); header.channels[0].name[strlen("B")] = '\0';
+    strncpy_s(header.channels[1].name, "G", 255); header.channels[1].name[strlen("G")] = '\0';
+    strncpy_s(header.channels[2].name, "R", 255); header.channels[2].name[strlen("R")] = '\0';
 
     header.pixel_types = (int*)malloc(sizeof(int) * header.num_channels);
     header.requested_pixel_types = (int*)malloc(sizeof(int) * header.num_channels);
     for (int i = 0; i < header.num_channels; i++) {
         header.pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT; // pixel type of input image
-        header.requested_pixel_types[i] = TINYEXR_PIXELTYPE_HALF; // pixel type of output image to be stored in .EXR
+        header.requested_pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT; // pixel type of output image to be stored in .EXR
+        header.compression_type = TINYEXR_COMPRESSIONTYPE_PIZ;
     }
 
-    std::cout << "  writing image ..." << "\n";
-
     const char* err;
-    int ret = SaveEXRImageToFile(&image, &header, argv[2], &err);
+    std::string fn = argv[2];
+    
+    int idx = fn.rfind('.');
+    if (idx == std::string::npos) {
+        // No extension found
+        fn = fn + "_" + std::to_string(uv) + "x" + std::to_string(uw) + ".exr";
+    }
+    else {
+        fn = std::string(&fn[0], &fn[fn.find_last_of(".")]) + "_" + std::to_string(uv) + "x" + std::to_string(uw) + ".exr";
+    }
+    
+    int ret = SaveEXRImageToFile(&image, &header, fn.c_str(), &err);
     if (ret != TINYEXR_SUCCESS) {
         fprintf(stderr, "Save EXR err: %s\n", err);
         return ret;
     }
-    printf("Saved exr file. [ %s ] \n", argv[2]);
+    printf("Saved exr file. [ %s ] \n", fn.c_str());
 
     //free(rgb);
 

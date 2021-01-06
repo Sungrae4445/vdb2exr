@@ -12,4 +12,6 @@ exit /b
 echo Main actions go here
 pushd 3RDPARTY
 ..\x64\Release\vdb2exr.exe ..\Testdata\wdas_cloud_sixteenth.vdb ..\Testdata\wdas_cloud_sixteenth.exr
+..\x64\Release\vdb2exr.exe ..\Testdata\wdas_cloud_eighth.vdb ..\Testdata\wdas_cloud_eighth.exr
+..\x64\Release\vdb2exr.exe ..\Testdata\wdas_cloud_quarter.vdb ..\Testdata\wdas_cloud_quarter.exr
 exit /b

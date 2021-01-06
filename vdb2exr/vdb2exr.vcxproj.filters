@@ -26,5 +26,8 @@
     <ClInclude Include="tinyexr.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="vdb2exr.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
