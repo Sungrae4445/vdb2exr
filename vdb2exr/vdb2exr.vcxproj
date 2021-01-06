@@ -264,7 +264,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\tinyexr\tinyexr.cc" />
     <ClCompile Include="vdb2exr.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="tinyexr.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
